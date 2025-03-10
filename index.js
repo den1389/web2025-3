@@ -41,3 +41,5 @@ if (options.output) {
     console.error("Error writing to file");
   }
 }
+
+
