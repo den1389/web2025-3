@@ -1,33 +1,43 @@
-const { Command } = require('commander');
-const fs = require('fs');
-
-const program = new Command();
+const fs = require("fs");
+const { program } = require("commander");
 
 program
-  .option('-i, --input <path>', 'Path to input file (required)')
-  .option('-o, --output <path>', 'Path to output file')
-  .option('-d, --display', 'Display result in console')
-  .parse(process.argv);
+  .requiredOption("-i, --input <path>", "Шлях до файлу JSON")
+  .option("-o, --output <path>", "Шлях до файлу для запису")
+  .option("-d, --display", "Вивід у консоль");
 
+program.parse(process.argv);
 const options = program.opts();
 
-if (!options.input) {
-  console.error('Please, specify input file');
+let data;
+try {
+  data = fs.readFileSync(options.input, "utf8");
+} catch (error) {
+  console.error("Cannot find input file");
   process.exit(1);
 }
 
-if (!fs.existsSync(options.input)) {
-  console.error('Cannot find input file');
+let jsonData;
+try {
+  jsonData = JSON.parse(data);
+} catch (error) {
+  console.error("Error parsing JSON");
   process.exit(1);
 }
 
-const data = fs.readFileSync(options.input, 'utf8');
+const filteredData = jsonData.filter((item) => item.parent === "BS3_BanksLiab");
+
+const output = filteredData.map((item) => `${item.nameEn}:${item.value}`).join("\n");
 
 if (options.display) {
-  console.log('Data:', data);
+  console.log(output);
 }
 
 if (options.output) {
-  fs.writeFileSync(options.output, data, 'utf8');
-  console.log(`Data saved to ${options.output}`);
+  try {
+    fs.writeFileSync(options.output, output, "utf8");
+    console.log(`Дані збережено у файл ${options.output}`);
+  } catch (error) {
+    console.error("Error writing to file");
+  }
 }
