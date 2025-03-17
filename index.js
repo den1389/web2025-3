@@ -24,7 +24,7 @@ const jsonData = JSON.parse(rawData);
 const filteredData = jsonData.filter(item => item.parent === "BS3_BanksLiab");
 
 const result = filteredData
-    .map(item => `${item.txten}: ${item.value}`) // txten - англійська назва показника
+    .map(item => `${item.txten}: ${item.value}`) 
     .join('\n');
 
 if (displayResult) {
