@@ -1,44 +1,40 @@
-const fs = require("fs");
-const { program } = require("commander");
+const { program } = require('commander');
+const fs = require('fs');
 
 program
-  .requiredOption("-i, --input <path>", "Шлях до файлу JSON")
-  .option("-o, --output <path>", "Шлях до файлу для запису")
-  .option("-d, --display", "Вивід у консоль");
+    .requiredOption('-i, --input <path>', 'шлях до JSON-файлу')
+    .option('-o, --output <path>', 'шлях до файлу для збереження результату')
+    .option('-d, --display', 'вивести результат у консоль');
 
 program.parse(process.argv);
+
 const options = program.opts();
+const inputPath = options.input;
+const outputPath = options.output;
+const displayResult = options.display;
 
-let data;
-try {
-  data = fs.readFileSync(options.input, "utf8");
-} catch (error) {
-  console.error("Cannot find input file");
-  process.exit(1);
+if (!fs.existsSync(inputPath)) {
+    console.error('Cannot find input file');
+    process.exit(1);
 }
 
-let jsonData;
-try {
-  jsonData = JSON.parse(data);
-} catch (error) {
-  console.error("Error parsing JSON");
-  process.exit(1);
+const rawData = fs.readFileSync(inputPath);
+const jsonData = JSON.parse(rawData);
+
+const filteredData = jsonData.filter(item => item.parent === "BS3_BanksLiab");
+
+const result = filteredData
+    .map(item => `${item.txten}: ${item.value}`) // txten - англійська назва показника
+    .join('\n');
+
+if (displayResult) {
+    console.log(result);
 }
 
-const filteredData = jsonData.filter((item) => item.parent === "BS3_BanksLiab");
-
-const output = filteredData.map((item) => `${item.nameEn}:${item.value}`).join("\n");
-
-if (options.display) {
-  console.log(output);
+if (outputPath) {
+    fs.writeFileSync(outputPath, result);
 }
 
-if (options.output) {
-  try {
-    fs.writeFileSync(options.output, output, "utf8");
-    console.log(`Дані збережено у файл ${options.output}`);
-  } catch (error) {
-    console.error("Error writing to file");
-  }
+if (!displayResult && !outputPath) {
+    console.log("Please specify output method (-o or -d).");
 }
-
